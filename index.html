@@ -182,6 +182,35 @@
             box-shadow: 0 15px 25px rgba(253, 121, 168, 0.4);
         }
 
+        .music-control {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            font-size: 20px;
+        }
+
+        .music-control.visible {
+            display: flex;
+        }
+
+        .music-control:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
         /* Instructions */
         .hint {
             position: fixed;
@@ -255,11 +284,21 @@
           <br> Желаю хорошо провести свой др! <br>
           Не скучать ❌, <br>
           Не грустеть❌, <br>
-      Only very good настроение✅!</p>
-        <button class="btn-restart" onclick="location.reload()">Еще раз!</button>
+          Only very good настроение✅!</p>
+        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <button class="btn-restart" onclick="location.reload()">Еще раз!</button>
+        </div>
+    </div>
+
+    <div class="music-control" id="music-toggle" title="Вкл/Выкл музыку">
+        🎵
     </div>
 
     <div class="hint" id="hint">Нажми на подарок, чтобы открыть</div>
+
+    <audio id="birthday-song" loop>
+        <source src="video_2026-02-23_23-16-21.mp4" type="audio/mpeg">
+    </audio>
 
     <script>
         /**
@@ -361,8 +400,27 @@
         const giftCube = document.getElementById('gift-cube');
         const congratsCard = document.getElementById('congrats-card');
         const hint = document.getElementById('hint');
+        const audio = document.getElementById('birthday-song');
+        const musicToggle = document.getElementById('music-toggle');
+
+        let isMusicPlaying = true;
+
+        musicToggle.addEventListener('click', () => {
+            if (isMusicPlaying) {
+                audio.pause();
+                musicToggle.innerHTML = '🔇';
+            } else {
+                audio.play();
+                musicToggle.innerHTML = '🎵';
+            }
+            isMusicPlaying = !isMusicPlaying;
+        });
 
         giftScene.addEventListener('click', () => {
+            // Start audio on user interaction (to bypass autoplay block)
+            audio.play().catch(err => console.log("Audio play failed:", err));
+            musicToggle.classList.add('visible');
+
             // State: Opening
             giftCube.classList.add('open');
             hint.style.display = 'none';
