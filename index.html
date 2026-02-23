@@ -26,12 +26,14 @@
         body {
             font-family: 'Montserrat', sans-serif;
             background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
             color: var(--text);
+            padding: 20px;
         }
 
         #canvas {
@@ -110,44 +112,48 @@
 
         /* Congratulations Card */
         .congrats-card {
-            position: absolute;
+            position: relative;
+            display: none;
             opacity: 0;
             transform: scale(0.5) translateY(100px);
             text-align: center;
-            padding: 3rem;
+            padding: 3rem 2rem;
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-radius: 30px;
             border: 1px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
             max-width: 600px;
-            width: 90%;
-            pointer-events: none;
+            width: 100%;
+            margin: auto;
             transition: all 1s cubic-bezier(0.19, 1, 0.22, 1);
             z-index: 50;
         }
 
         .congrats-card.visible {
+            display: block;
             opacity: 1;
             transform: scale(1) translateY(0);
-            pointer-events: auto;
         }
 
         .congrats-card h1 {
-            font-size: 3.5rem;
+            font-size: clamp(1.8rem, 8vw, 3.5rem);
             font-weight: 900;
             background: linear-gradient(to right, #fff, var(--secondary), var(--accent));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1.5rem;
-            letter-spacing: -2px;
+            margin-bottom: 1rem;
+            letter-spacing: -1px;
+            line-height: 1.1;
         }
 
         .congrats-card p {
-            font-size: 1.2rem;
+            font-size: clamp(1rem, 4vw, 1.2rem);
             line-height: 1.6;
             color: rgba(255, 255, 255, 0.9);
             margin-bottom: 2rem;
+            word-wrap: break-word;
         }
 
         .btn-restart {
@@ -177,6 +183,43 @@
             font-weight: 400;
             opacity: 0.6;
             animation: breathe 2s infinite ease-in-out;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .scene {
+                width: 150px;
+                height: 150px;
+            }
+            .cube-face {
+                width: 150px;
+                height: 150px;
+            }
+            /* Adjust cube translations for smaller size */
+            .front  { transform: rotateY(0deg) translateZ(75px); }
+            .back   { transform: rotateY(180deg) translateZ(75px); }
+            .right  { transform: rotateY(90deg) translateZ(75px); }
+            .left   { transform: rotateY(-90deg) translateZ(75px); }
+            .top    { transform: rotateX(90deg) translateZ(75px); }
+            .bottom { transform: rotateX(-90deg) translateZ(75px); }
+
+            .ribbon-v { width: 30px; }
+            .ribbon-h { height: 30px; }
+            
+            .congrats-card {
+                padding: 2rem 1.5rem;
+                border-radius: 20px;
+            }
+        }
+
+        @media (max-height: 600px) {
+            body {
+                align-items: flex-start;
+                padding-top: 50px;
+            }
+            .scene {
+                margin-bottom: 100px;
+            }
         }
 
         @keyframes breathe {
@@ -331,8 +374,12 @@
                 setTimeout(() => celebration.burst(centerX - 100, centerY - 100, 50), 200);
                 setTimeout(() => celebration.burst(centerX + 100, centerY - 100, 50), 400);
                 
-                // Show card
+                // Hide gift and show card
+                giftScene.style.display = 'none';
                 congratsCard.classList.add('visible');
+                
+                // Ensure scroll is at top
+                window.scrollTo(0, 0);
             }, 800);
         });
 
