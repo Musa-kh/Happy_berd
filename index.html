@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ПУЧОК!</title>
+    <link rel="icon" href=ПУЧОК.jpeg>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --accent: #fd79a8;
+            --bg: #0f0c29;
+            --text: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: var(--text);
+        }
+
+        #canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* 3D Scene */
+        .scene {
+            width: 200px;
+            height: 200px;
+            perspective: 1000px;
+            cursor: pointer;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10;
+        }
+
+        .scene:hover {
+            transform: scale(1.1) rotateY(10deg);
+        }
+
+        .cube {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transform: rotateX(-20deg) rotateY(45deg);
+            transition: transform 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .cube.open {
+            transform: rotateX(0deg) rotateY(720deg) scale(0);
+            opacity: 0;
+        }
+
+        .cube-face {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(108, 92, 231, 0.8);
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Cube positions */
+        .front  { transform: rotateY(0deg) translateZ(100px); }
+        .back   { transform: rotateY(180deg) translateZ(100px); }
+        .right  { transform: rotateY(90deg) translateZ(100px); }
+        .left   { transform: rotateY(-90deg) translateZ(100px); }
+        .top    { transform: rotateX(90deg) translateZ(100px); background: rgba(162, 155, 254, 0.9); }
+        .bottom { transform: rotateX(-90deg) translateZ(100px); }
+
+        .ribbon-v {
+            position: absolute;
+            width: 40px;
+            height: 100%;
+            background: var(--accent);
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+
+        .ribbon-h {
+            position: absolute;
+            width: 100%;
+            height: 40px;
+            background: var(--accent);
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+
+        /* Congratulations Card */
+        .congrats-card {
+            position: absolute;
+            opacity: 0;
+            transform: scale(0.5) translateY(100px);
+            text-align: center;
+            padding: 3rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            max-width: 600px;
+            width: 90%;
+            pointer-events: none;
+            transition: all 1s cubic-bezier(0.19, 1, 0.22, 1);
+            z-index: 50;
+        }
+
+        .congrats-card.visible {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            pointer-events: auto;
+        }
+
+        .congrats-card h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: linear-gradient(to right, #fff, var(--secondary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1.5rem;
+            letter-spacing: -2px;
+        }
+
+        .congrats-card p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 2rem;
+        }
+
+        .btn-restart {
+            padding: 12px 30px;
+            border-radius: 50px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(108, 92, 231, 0.3);
+        }
+
+        .btn-restart:hover {
+            background: var(--accent);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 25px rgba(253, 121, 168, 0.4);
+        }
+
+        /* Instructions */
+        .hint {
+            position: fixed;
+            bottom: 40px;
+            font-weight: 400;
+            opacity: 0.6;
+            animation: breathe 2s infinite ease-in-out;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: translateY(0); opacity: 0.4; }
+            50% { transform: translateY(-10px); opacity: 0.8; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas"></canvas>
+
+    <div class="scene" id="gift-scene">
+        <div class="cube" id="gift-cube">
+            <div class="cube-face front"><div class="ribbon-v"></div><div class="ribbon-h"></div></div>
+            <div class="cube-face back"><div class="ribbon-v"></div><div class="ribbon-h"></div></div>
+            <div class="cube-face right"><div class="ribbon-v"></div><div class="ribbon-h"></div></div>
+            <div class="cube-face left"><div class="ribbon-v"></div><div class="ribbon-h"></div></div>
+            <div class="cube-face top"><div class="ribbon-v"></div><div class="ribbon-h"></div></div>
+            <div class="cube-face bottom"><div class="ribbon-v"></div><div class="ribbon-h"></div></div>
+        </div>
+    </div>
+
+    <div class="congrats-card" id="congrats-card">
+        <h1>С ДНЁМ РОЖДЕНИЯ!</h1> <h2>🥳🥳</h2>
+        <p>С днем рождаение <b>ПУЧОК</b> желаю счастья здоровья всего наилучшего, чтобы <b>амеба</b> не засыпала раньше времени и тебя за дверью не остовляла, много денег мало проблем, и больше таких хороших друзей как <b>Я</b>.
+          <br> Желаю хорошо провести свой др! <br>
+          Не скучать ❌, <br>
+          Не грустеть❌, <br>
+      Only very good настроение✅!</p>
+        <button class="btn-restart" onclick="location.reload()">Еще раз!</button>
+    </div>
+
+    <div class="hint" id="hint">Нажми на подарок, чтобы открыть</div>
+
+    <script>
+        /**
+         * Middle-level Developer Implementation: 
+         * - Object-Oriented Particle System
+         * - Canvas Optimization
+         * - State Management
+         */
+
+        class Particle {
+            constructor(canvas, x, y) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 8 + 4;
+                this.speedX = Math.random() * 10 - 5;
+                this.speedY = Math.random() * -15 - 5;
+                this.gravity = 0.4;
+                this.color = `hsl(${Math.random() * 360}, 80%, 60%)`;
+                this.rotation = Math.random() * 360;
+                this.rotationSpeed = Math.random() * 10 - 5;
+                this.opacity = 1;
+                this.friction = 0.99;
+            }
+
+            update() {
+                this.speedY += this.gravity;
+                this.speedX *= this.friction;
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.rotation += this.rotationSpeed;
+                this.opacity -= 0.005;
+                return this.opacity > 0;
+            }
+
+            draw() {
+                this.ctx.save();
+                this.ctx.translate(this.x, this.y);
+                this.ctx.rotate(this.rotation * Math.PI / 180);
+                this.ctx.globalAlpha = this.opacity;
+                this.ctx.fillStyle = this.color;
+                
+                // Draw square confetti
+                this.ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+                this.ctx.restore();
+            }
+        }
+
+        class Celebration {
+            constructor() {
+                this.canvas = document.getElementById('canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.particles = [];
+                this.animationId = null;
+                
+                this.init();
+            }
+
+            init() {
+                window.addEventListener('resize', () => this.resize());
+                this.resize();
+            }
+
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+
+            burst(x, y, count = 150) {
+                for (let i = 0; i < count; i++) {
+                    this.particles.push(new Particle(this.canvas, x, y));
+                }
+                
+                if (!this.animationId) {
+                    this.animate();
+                }
+            }
+
+            animate() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                this.particles = this.particles.filter(p => {
+                    const alive = p.update();
+                    if (alive) p.draw();
+                    return alive;
+                });
+
+                if (this.particles.length > 0) {
+                    this.animationId = requestAnimationFrame(() => this.animate());
+                } else {
+                    this.animationId = null;
+                }
+            }
+        }
+
+        const celebration = new Celebration();
+        const giftScene = document.getElementById('gift-scene');
+        const giftCube = document.getElementById('gift-cube');
+        const congratsCard = document.getElementById('congrats-card');
+        const hint = document.getElementById('hint');
+
+        giftScene.addEventListener('click', () => {
+            // State: Opening
+            giftCube.classList.add('open');
+            hint.style.display = 'none';
+
+            // Timing for sequence
+            setTimeout(() => {
+                const rect = giftScene.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                // Explosions
+                celebration.burst(centerX, centerY, 200);
+                
+                // Secondary bursts for "wow" effect
+                setTimeout(() => celebration.burst(centerX - 100, centerY - 100, 50), 200);
+                setTimeout(() => celebration.burst(centerX + 100, centerY - 100, 50), 400);
+                
+                // Show card
+                congratsCard.classList.add('visible');
+            }, 800);
+        });
+
+    </script>
+</body>
+</html>
