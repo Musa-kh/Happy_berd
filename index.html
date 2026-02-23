@@ -21,6 +21,8 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
         }
 
         body {
@@ -34,6 +36,8 @@
             overflow-y: auto;
             color: var(--text);
             padding: 20px;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         #canvas {
@@ -154,6 +158,8 @@
             color: rgba(255, 255, 255, 0.9);
             margin-bottom: 2rem;
             word-wrap: break-word;
+            user-select: text;
+            -webkit-user-select: text;
         }
 
         .btn-restart {
